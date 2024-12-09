@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+          font-family: Comic Sans MS, cursive, sans-serif; /* Comic Sans */
+          display: flex;
+          justify-content: center; /* Центрирование по горизонтали */
+          align-items: center; /* Центрирование по вертикали */
+          min-height: 100vh; /* Занимает всю высоту экрана */
+        }
+        
+        .container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 500px; /* Ширина контейнера */
+          padding: 20px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        }
+        
+        label {
+          margin-bottom: 10px;
+          font-size: 16px;
+        }
+        
+        button {
+          padding: 10px 20px;
+          font-size: 16px;
+          border: none;
+          border-radius: 5px;
+          background-color: #4CAF50; /* Зеленый цвет */
+          color: white;
+          cursor: pointer;
+        }
+        
+        button:hover {
+          background-color: #45a049;
+        }
+        
+        select {
+          padding: 10px;
+          font-size: 16px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        }
+        
+        progress {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
+    <title></title>
+</head>
+<body>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <!-- Отображение статуса -->
+        <div style="display: flex; margin-bottom: 10px;">
+            <label for="status" style="display: flex;">{{ status }}</label>
+        </div>
+        
+        <!-- Загрузка видео -->
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data" style="margin-top: 10px; margin-bottom: 5px;">
+            <input type="file" name="files" multiple required>
+            <button type="submit">Загрузить</button>
+        </form>
+        
+        <!-- Прогресс загрузки видео в каталог -->
+        <div style="margin: 5px">
+            <progress id="progressBar" value="0" max="100" style="flex-direction: row; display: none;"></progress>
+        </div>
+
+        <!-- Выбор видео из предзагруженных видео -->
+        <form method="post" enctype="multipart/form-data">
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 5px;">
+                <select id="fileSelect">
+                    {% for file in files %}
+                        <option>{{ file }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="form-control btn btn-success">Использовать</button>
+        </form>
+        
+        <!-- Запустить расчет по видео -->
+        <div id="runBlock" enctype="multipart/form-data" style="display: flex; margin-top: 10px;">
+            <button type="submit" id="runButton">Запуск расчетов</button>
+        </div>
+    </div>
+
+    <script>
+    window.addEventListener('runButton', function(e) {
+        runProcessing(event);
+    });
+
+    async function runProcessing(event) {
+        event.preventDefault();  // Предотвращаем отправку формы
+
+        const response = await fetch('/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+
+        // Проверяем тип контента в заголовках ответа
+        const contentType = response.headers.get("content-type");
+
+        if (response.ok) {
+            // Если это HTML, перенаправляем на video_feed.html
+            if (contentType && contentType.includes("text/html")) {
+                // Перенаправление на страницу video_feed.html
+                window.location.href = "/video_feed"; // Укажите правильный путь, если он отличается
+            }
+            // Если это JSON, обрабатываем как JSON
+            else if (contentType && contentType.includes("application/json")) {
+                const result = await response.json(); // Получаем JSON
+                alert(result.status);  // Сообщение об обработке в фоновом режиме
+            }
+        } else {
+            alert('Ошибка: ' + response.statusText);  // Обработка ошибок
+        }
+    }
+        const form = document.getElementById('uploadForm');
+        const progressBar = document.getElementById('progressBar');
+        const statusDiv = document.getElementById('status');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Отменяем стандартное поведение формы
+
+            const formData = new FormData(form);
+            progressBar.style.display = 'block'; // Показываем прогресс-бар
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+
+            // Обработка события прогресса загрузки
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.value = percentComplete;
+                }
+            });
+
+            // Обработка завершения загрузки
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    statusDiv.innerHTML = "Файлы успешно загружены!";
+                } else {
+                    statusDiv.innerHTML = "Ошибка при загрузке файлов.";
+                }
+                progressBar.style.display = 'none'; // Скрываем прогресс-бар
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>

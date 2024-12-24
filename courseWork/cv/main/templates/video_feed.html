@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Video Feed</title>
+</head>
+<body>
+<h1>Video Feed</h1>
+<img src="/start_stream" id="video" style="width: 100%; max-width: 1000px;">
+<br>
+<button onclick="stopVideo()">Остановить обработку</button>
+<button onclick="goBack()">Назад</button>
+
+<script>
+    function goBack() {
+        window.location.href = '/';  // Перенаправление на главную страницу
+    }
+
+    function stopVideo() {
+        fetch('/stop_stream', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+
+        fetch('/stop_stream');  // Отправляем запрос на остановку потока
+        alert('Видеопоток остановлен. Возврат на основную страницу.');
+        window.location.href = '/';
+    }
+</script>
+</body>
+</html>

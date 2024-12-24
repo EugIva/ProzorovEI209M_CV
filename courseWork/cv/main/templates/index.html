@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+</head>
+<body>
+    <div style="display: flex; flex-direction: column; align-items: center; justify-items: center;">
+        <!-- Отображение статуса -->
+        <div style="display: flex; margin-bottom: 10px; margin-top: 10px">
+            <label for="status" style="display: flex;">{{ status }}</label>
+        </div>
+        
+        <!-- Загрузка видео -->
+        <form id="uploadForm" action="/upload_video" method="post" enctype="multipart/form-data" style="margin-bottom: 10px; margin-top: 10px;">
+            <input type="file" name="files" multiple required>
+            <button type="submit">Загрузить</button>
+        </form>
+        
+        <!-- Прогресс загрузки видео в каталог -->
+        <div style="margin: 10px">
+            <progress id="progressBar" value="0" max="100" style="flex-direction: row; display: none;"></progress>
+        </div>
+
+        <!-- Выбор видео из предзагруженных видео -->
+        <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; margin-top: 10px">
+            <select id="fileSelect">
+                {% for file in files %}
+                    <option value="{{ file }}">{{ file }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Запустить расчет по видео -->
+        <div id="runBlock" enctype="multipart/form-data" style="display: flex; margin-bottom:10 px; margin-top: 10px;">
+            <button id="runButton">Запуск расчетов</button>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('runButton').addEventListener('click', function(event) {
+        runProcessing(event);
+    });
+
+    async function runProcessing(event) {
+        event.preventDefault();
+        const selectedFile = fileSelect.value; // Получаем выбранное значение
+
+        const response = await fetch('/run_analysis', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ file_name: selectedFile }) // Отправляем данные в JSON
+        });
+
+        if (response.ok) {
+            window.location.href = "/video_feed";
+        } else {
+            // Обработка ошибки
+            alert('Ошибка: ' + response.statusText);
+        }
+    }
+
+        const form = document.getElementById('uploadForm');
+        const progressBar = document.getElementById('progressBar');
+        const statusDiv = document.getElementById('status');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            
+            // Прогресс-бар загрузки видео
+            const formData = new FormData(form);
+            progressBar.style.display = 'block';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+
+            // Обработка события прогресса загрузки
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.value = percentComplete;
+                }
+            });
+
+            // Обработка завершения загрузки
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    statusDiv.innerHTML = "Файлы успешно загружены!";
+                } else {
+                    statusDiv.innerHTML = "Ошибка при загрузке файлов.";
+                }
+                progressBar.style.display = 'none'; // Скрываем прогресс-бар
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>

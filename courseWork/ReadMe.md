@@ -6,8 +6,7 @@
 📧 eugene_ivanson@mail.ru            
 tg: @Eugiva            
 
-# Video Person Recognition Service
-# Cервис распознавания лиц по видео
+# Video Person Recognition Service \ Cервис распознавания лиц по видео
 
 ## Описание
 
